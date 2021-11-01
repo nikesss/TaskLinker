@@ -1,0 +1,21 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netcoreapp3.1</TargetFramework>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Abot" Version="2.0.70" />
+    <PackageReference Include="AngleSharp" Version="0.16.1" />
+    <PackageReference Include="Npgsql" Version="5.0.10" />
+    <PackageReference Include="Pullenti.Core" Version="4.3.0" />
+    <PackageReference Include="ServiceStack.Core" Version="5.*" />
+    <PackageReference Include="ServiceStack.OrmLite.PostgreSQL" Version="5.12.1" />
+    <PackageReference Include="ServiceStack.OrmLite.PostgreSQL.Core" Version="5.12.1" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\TaskTT.ServiceModel\TaskTT.ServiceModel.csproj" />
+  </ItemGroup>
+
+</Project>

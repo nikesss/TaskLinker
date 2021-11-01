@@ -1,0 +1,13 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="ServiceStack.Interfaces.Core" Version="5.*" />
+    <PackageReference Include="ServiceStack.OrmLite.PostgreSQL" Version="5.12.1" />
+    <PackageReference Include="ServiceStack.OrmLite.PostgreSQL.Core" Version="5.12.1" />
+  </ItemGroup>
+
+</Project>
