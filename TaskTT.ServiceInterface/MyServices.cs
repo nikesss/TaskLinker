@@ -1,5 +1,6 @@
 using System;
-
+using System.Collections.Generic;
+using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Abot2.Crawler;
@@ -16,14 +17,46 @@ namespace TaskTT.ServiceInterface
 
     public class ParsePage : Service
     {
-        public object Any(Page request)
+        public object Any(Search request)
+        {
+
+            if (request.TypeSearch == "byarticle")
+            {
+                var dblist = Db.From<ParsedPage>()
+                .Where<ParsedPage>(x => x.TextArticle.Contains($"{request.AtributeSearch}"));
+                
+                return  Db.Select(dblist);
+            }
+            else if (request.TypeSearch == "pullenti")
+            {
+
+
+                var dblist = Db.From<ParsedPage>()
+                .Join<Entitis>((x, y) => x.Id == y.ParsedPageId)
+                .Where<Entitis>(x => x.ValueEntitis == request.AtributeSearch);
+
+
+                return Db.Select(dblist);
+            }
+            else
+            {
+                return new SearchRespounce { Result = "Not Found" };
+            }
+
+        }
+        public async Task Any(ParsingdPage request)
         {
             var pathPage = "https://www.mlyn.by/novosti/";
-            DemoSimpleCrawler(pathPage);
-
-            return new HelloResponse { Result = $"Parse is working = {request.PageParse}!" };
+            await DemoSimpleCrawler(pathPage);
         }
+        public object Any(ShowArticles request)
+        {
 
+
+            return Db.Select<ParsedPage>().OrderByDescending(x=>x.DateArticle);
+
+
+        }
         public async Task DemoSimpleCrawler(string myUri)
         {
             var config = new CrawlConfiguration
@@ -38,7 +71,7 @@ namespace TaskTT.ServiceInterface
             crawler.PageCrawlStarting += crawler_ProcessPageCrawlStarting;
             crawler.PageCrawlCompleted += crawler_ProcessPageCrawlCompleted;
             var crawlResult = await crawler.CrawlAsync(new Uri(myUri));
-            
+
 
 
 

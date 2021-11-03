@@ -32,7 +32,7 @@ namespace TaskTT
 
     public class Startup : ModularStartup
     {
-        public Startup(IConfiguration configuration) : base(configuration){}
+        public Startup(IConfiguration configuration) : base(configuration) { }
 
         // This method gets called by the runtime. Use this method to add services to the container.
         // For more information on how to configure your application, visit https://go.microsoft.com/fwlink/?LinkID=398940
@@ -47,7 +47,7 @@ namespace TaskTT
 
             app.Run(context =>
             {
-                context.Response.Redirect("/parse");
+                context.Response.Redirect("");
                 return Task.FromResult(0);
             });
         }
@@ -71,10 +71,14 @@ namespace TaskTT
                     db.CreateTable<ParsedPage>();
                     db.CreateTable<Entitis>();
                 }
-                    
+
             }
             Pullenti.Sdk.InitializeAll();
-            
+            Plugins.Add(new CorsFeature(
+                allowOriginWhitelist: new[] { "http://localhost", "http://localhost:3000", "http://run.plnkr.co" },
+                allowCredentials: true,
+                allowedHeaders: "Content-Type, Allow, Authorization, X-Args"));
+
         }
     }
 }
