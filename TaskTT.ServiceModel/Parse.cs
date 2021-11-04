@@ -1,17 +1,14 @@
-using ServiceStack;
+﻿using ServiceStack;
+using System;
+using System.Collections.Generic;
+using System.Text;
 
 namespace TaskTT.ServiceModel
 {
-    [Route("/search/{TypeSearch}/{AtributeSearch}")]
-    public class Search : IReturn<SearchRespounce>
+    [Route("/parse")]
+    public class ParsingdPage : IReturn
     {
-        public string AtributeSearch { get; set; }
-        public string TypeSearch { get; set; }
+        public string Start { get; set; }
     }
-    public class SearchRespounce
-    {
-        public string Result { get; set; }
-    }
-
 
 }

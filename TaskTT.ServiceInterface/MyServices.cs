@@ -20,23 +20,22 @@ namespace TaskTT.ServiceInterface
         public object Any(Search request)
         {
 
-            if (request.TypeSearch == "byarticle")
+            if (request.AtributeSearch != null && request.TypeSearch == "byarticle")
             {
                 var dblist = Db.From<ParsedPage>()
                 .Where<ParsedPage>(x => x.TextArticle.Contains($"{request.AtributeSearch}"));
                 
                 return  Db.Select(dblist);
             }
-            else if (request.TypeSearch == "pullenti")
+            else if (request.AtributeSearch != null && request.TypeSearch == "pullenti")
             {
 
+                var sql = Db.From<Entitis>()
+                    .Where(x => x.ValueEntitis.Contains(request.AtributeSearch)).SelectDistinct(x=>x.ParsedPageId);
+                var sqlList = Db.SqlList<int>(sql);
+                var dblist = Db.SelectByIds<ParsedPage>(sqlList);
 
-                var dblist = Db.From<ParsedPage>()
-                .Join<Entitis>((x, y) => x.Id == y.ParsedPageId)
-                .Where<Entitis>(x => x.ValueEntitis == request.AtributeSearch);
-
-
-                return Db.Select(dblist);
+                return dblist;
             }
             else
             {
@@ -52,7 +51,7 @@ namespace TaskTT.ServiceInterface
         public object Any(ShowArticles request)
         {
 
-
+            
             return Db.Select<ParsedPage>().OrderByDescending(x=>x.DateArticle);
 
 
@@ -61,14 +60,11 @@ namespace TaskTT.ServiceInterface
         {
             var config = new CrawlConfiguration
             {
-                MaxPagesToCrawl = 1000,
+                MaxPagesToCrawl = 5000,
                 MinCrawlDelayPerDomainMilliSeconds = 3000
-
-                //Wait this many millisecs between requests
             };
 
             var crawler = new PoliteWebCrawler(config);
-            crawler.PageCrawlStarting += crawler_ProcessPageCrawlStarting;
             crawler.PageCrawlCompleted += crawler_ProcessPageCrawlCompleted;
             var crawlResult = await crawler.CrawlAsync(new Uri(myUri));
 
@@ -80,7 +76,7 @@ namespace TaskTT.ServiceInterface
 
         public void AngelSharp(CrawledPage crp)
         {
-            var angleSharpHtmlDocument = crp.AngleSharpHtmlDocument; //AngleSharp parser
+            var angleSharpHtmlDocument = crp.AngleSharpHtmlDocument;
 
             try
             {
@@ -126,17 +122,8 @@ namespace TaskTT.ServiceInterface
                     }
                 }
                 Db.Close();
-                Console.WriteLine(ScrubHtml(tittleArticle));
             }
-            catch
-            {
-                Console.WriteLine("www");
-            }
-        }
-        void crawler_ProcessPageCrawlStarting(object sender, PageCrawlStartingArgs e)
-        {
-            PageToCrawl pageToCrawl = e.PageToCrawl;
-
+            catch{}
         }
         private void crawler_ProcessPageCrawlCompleted(object sender, PageCrawlCompletedArgs e)
         {
@@ -144,7 +131,7 @@ namespace TaskTT.ServiceInterface
             CrawledPage crawledPage = e.CrawledPage;
             if (crawledPage.HttpRequestMessage != null)
             {
-                Console.WriteLine(crawledPage.HttpRequestMessage.RequestUri.OriginalString + " is parsing");
+                Console.WriteLine(crawledPage.HttpRequestMessage.RequestUri.OriginalString + " is parsed");
                 AngelSharp(crawledPage);
             }
 
