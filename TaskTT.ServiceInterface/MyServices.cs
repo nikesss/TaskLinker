@@ -8,6 +8,7 @@ using Abot2.Poco;
 using AngleSharp;
 using Pullenti.Ner;
 using ServiceStack;
+using ServiceStack.Data;
 using ServiceStack.OrmLite;
 using TaskTT.ServiceModel;
 using TaskTT.ServiceModel.Types;
@@ -17,50 +18,76 @@ namespace TaskTT.ServiceInterface
 
     public class ParsePage : Service
     {
+        public IDbConnectionFactory DbFactory { get; set; }
+
         public object Any(Search request)
         {
 
             if (request.AtributeSearch != null && request.TypeSearch == "byarticle")
             {
-                var dblist = Db.From<ParsedPage>()
-                .Where<ParsedPage>(x => x.TextArticle.Contains($"{request.AtributeSearch}"));
+                using (var db = DbFactory.OpenDbConnection())
+                {
+                    var sql = db.From<ParsedPage>()
+                        .Where<ParsedPage>(x => x.TextArticle.Contains($"{request.AtributeSearch}"));
+                    var sqlList = db.SqlList<int>(sql);
+                    var articles = db.Select<ParsedPage>(sql)
+                        .OrderByDescending(x => x.DateArticle)
+                        .Skip(request.CurentPage * request.TotalArticlePerPage)
+                        .Take(request.TotalArticlePerPage).ToList();
+
+                    return new SearchRespounce { TotalArticles = sqlList.Count, DbList = articles };
+                }
                 
-                return  Db.Select(dblist);
             }
             else if (request.AtributeSearch != null && request.TypeSearch == "pullenti")
             {
+                using(var db = DbFactory.OpenDbConnection())
+                {
+                    var sql = db.From<Entitis>()
+                        .Where(x => x.ValueEntitis.Contains(request.AtributeSearch)).SelectDistinct(x => x.ParsedPageId);
+                    var sqlList = db.SqlList<int>(sql);
+                    var dblist = db.SelectByIds<ParsedPage>(sqlList)
+                        .OrderByDescending(x=>x.DateArticle)
+                        .Skip(request.CurentPage * request.TotalArticlePerPage)
+                        .Take(request.TotalArticlePerPage).ToList();
 
-                var sql = Db.From<Entitis>()
-                    .Where(x => x.ValueEntitis.Contains(request.AtributeSearch)).SelectDistinct(x=>x.ParsedPageId);
-                var sqlList = Db.SqlList<int>(sql);
-                var dblist = Db.SelectByIds<ParsedPage>(sqlList);
-
-                return dblist;
+                    return new SearchRespounce { TotalArticles = sqlList.Count, DbList = dblist };
+                }
+                
             }
             else
             {
-                return new SearchRespounce { Result = "Not Found" };
+
+                return new SearchRespounce { TotalArticles = 0, DbList = null };
             }
 
         }
-        public async Task Any(ParsingdPage request)
+        public object Any(ShowArticles request)
+        {
+            var sqlList = Db.Select<ParsedPage>();
+            var articles = Db.Select<ParsedPage>()
+                .OrderByDescending(x => x.DateArticle)
+                .Skip(request.CurrentPage * request.TotalArticlePerPage)
+                .Take(request.TotalArticlePerPage).ToList();
+
+            return new ShowArticlesRespounce { TotalArticles = sqlList.Count, DbList = articles };
+
+
+
+        }
+        public async Task Any(ParsingPage request)
         {
             var pathPage = "https://www.mlyn.by/novosti/";
             await DemoSimpleCrawler(pathPage);
-        }
-        public object Any(ShowArticles request)
-        {
-
             
-            return Db.Select<ParsedPage>().OrderByDescending(x=>x.DateArticle);
-
-
+            
         }
+        
         public async Task DemoSimpleCrawler(string myUri)
         {
             var config = new CrawlConfiguration
             {
-                MaxPagesToCrawl = 5000,
+                MaxPagesToCrawl = 3000,
                 MinCrawlDelayPerDomainMilliSeconds = 3000
             };
 
@@ -83,7 +110,7 @@ namespace TaskTT.ServiceInterface
 
                 var blockArticle = angleSharpHtmlDocument.Body.QuerySelector("[class='post clearfix']");
 
-                if (blockArticle == null)
+                if (blockArticle == null )
                     return;
 
                 var tittleArticle = blockArticle.GetElementsByClassName("post-title").FirstNonDefault().TextContent;

@@ -6,7 +6,7 @@ using System.Text;
 namespace TaskTT.ServiceModel
 {
     [Route("/parse")]
-    public class ParsingdPage : IReturn
+    public class ParsingPage : IReturn
     {
         public string Start { get; set; }
     }

@@ -5,13 +5,15 @@ using System.Text;
 
 namespace TaskTT.ServiceModel
 {
-    [Route("/show")]
+    [Route("/show/{CurrentPage}/{TotalArticlePerPage}")]
     public class ShowArticles : IReturn<ShowArticlesRespounce>
     {
-        public string Show { get; set; }
+        public int CurrentPage { get; set; }
+        public int TotalArticlePerPage { get; set; }
     }
     public class ShowArticlesRespounce
     {
-        public string Result { get; set; }
+        public int TotalArticles { get; set; }
+        public List<ParsedPage> DbList { get; set; }
     }
 }
